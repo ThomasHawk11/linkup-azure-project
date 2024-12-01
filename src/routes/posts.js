@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { posts } = require('../config/database');
 const { mediaContainer } = require('../config/storage');
+const { indexPost } = require('../services/search');
 const router = express.Router();
 const upload = multer();
 
@@ -27,8 +28,10 @@ router.post('/', upload.single('media'), async (req, res) => {
     };
 
     await posts.items.create(post);
+    await indexPost(post); // Index the post for search
     res.json(post);
   } catch (error) {
+    console.error('Error creating post:', error);
     res.status(500).json({ error: 'Failed to create post' });
   }
 });
