@@ -107,7 +107,6 @@ Authorization: Bearer {token}
 
 Response:
 ```json
-[
   {
     "id": "string",
     "userId": "string",
@@ -115,7 +114,6 @@ Response:
     "mediaUrl": "string",
     "createdAt": "string"
   }
-]
 ```
 
 ### User Endpoints
