@@ -8,7 +8,7 @@ const upload = multer();
 router.post('/', upload.single('media'), async (req, res) => {
   try {
     const { content } = req.body;
-    const userId = req.user.userId;
+    const userId = req.auth.userId;
 
     let mediaUrl = null;
     if (req.file) {
