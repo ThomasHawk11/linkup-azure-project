@@ -3,6 +3,7 @@ const multer = require('multer');
 const { posts } = require('../config/database');
 const { mediaContainer } = require('../config/storage');
 const { indexPost } = require('../services/search');
+const { deletePost, validatePostOwnership } = require('../services/posts');
 const router = express.Router();
 const upload = multer();
 
@@ -48,6 +49,35 @@ router.get('/:userId', async (req, res) => {
     res.json(userPosts);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+router.delete('/:postId', async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const userId = req.auth.userId;
+
+    console.log('Attempting to delete post:', postId, 'by user:', userId);
+
+    // Verify post ownership
+    const isOwner = await validatePostOwnership(postId, userId);
+    console.log('isOwner:', isOwner);
+    if (!isOwner) {
+      console.log('Unauthorized deletion attempt - not owner');
+      return res.status(403).json({ error: 'Unauthorized to delete this post' });
+    }
+
+    // Delete the post and its associated media
+    const result = await deletePost(postId);
+    
+    if (result.success) {
+      res.json({ message: 'Post deleted successfully' });
+    } else {
+      res.status(404).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Error in delete post route:', error);
+    res.status(500).json({ error: 'Failed to delete post' });
   }
 });
 
