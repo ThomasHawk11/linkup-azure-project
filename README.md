@@ -150,22 +150,11 @@ cd linkup-social-platform
 npm install
 ```
 
-3. **Deploy Azure Resources**
+5. **Run the application locally**
 ```bash
-cd infrastructure
-chmod +x azure-setup.sh
-./azure-setup.sh
+npm start
 ```
 
-4. **Configure Environment Variables**
-After running the Azure setup script, collect all the necessary connection strings and keys from the Azure Portal and update your `.env` file.
-
-5. **Deploy the Application**
-```bash
-az webapp deployment source config-local-git --name linkup-api --resource-group linkup-rg
-git remote add azure <git-url-from-previous-command>
-git push azure main
-```
 
 ## Development Setup
 
