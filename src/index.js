@@ -1,6 +1,7 @@
 const express = require('express');
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts');
+const usersRoutes = require('./routes/users');
 const searchRoutes = require('./routes/search');
 const authMiddleware = require('./middleware/auth');
 require('dotenv').config();
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 
 // Protected routes
+app.use('/users', authMiddleware, usersRoutes);
 app.use('/posts', authMiddleware, postsRoutes);
 app.use('/search', authMiddleware, searchRoutes);
 
