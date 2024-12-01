@@ -84,24 +84,6 @@ az webapp log config --name linkup-supinfo-api \
                     --web-server-logging filesystem
 ```
 
-## Manual Deployment
-
-If you prefer manual deployment over GitHub Actions:
-
-```bash
-# Build the project
-npm install
-npm run build
-
-# Zip the deployment package
-zip -r deployment.zip ./*
-
-# Deploy to Azure
-az webapp deployment source config-zip --resource-group linkup-rg \
-                                     --name linkup-supinfo-api \
-                                     --src deployment.zip
-```
-
 ## Post-Deployment Verification
 
 1. Check Application Logs:
