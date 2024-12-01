@@ -118,6 +118,45 @@ Response:
 ]
 ```
 
+### User Endpoints
+
+#### Get User
+```http
+GET /users/{userId}
+Authorization: Bearer {token}
+```
+
+Response:
+```json
+{
+  "id": "string",
+  "username": "string",
+  "email": "string",
+  "isPrivate": "boolean",
+  "createdAt": "string",
+  "_rid": "string",
+  "_self": "string",
+  "_etag": "string",
+  "_attachments": "string",
+  "_ts": "integer"
+}
+```
+
+#### Get User Profile
+```http
+GET /users/{userId}/profile
+Authorization: Bearer {token}
+```
+
+Response:
+```json
+{
+    "id": "string",
+    "username": "string",
+    "isPrivate": "boolean",
+}
+```
+
 ### Search Endpoints
 
 #### Search Posts
