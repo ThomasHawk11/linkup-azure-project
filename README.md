@@ -1,16 +1,37 @@
-# Link Up - Headless Social Media Platform
+# Link Up Social Platform
 
-A scalable, efficient backend system for content creators built with Node.js and Azure services. This platform provides a flexible social media backend that can be integrated with any front-end interface.
+A scalable, headless social media platform built with Node.js and Azure services, designed for content creators and digital communities.
 
-## System Architecture
+## System Overview
 
-### Azure Services Used
-- **Azure Cosmos DB**: Main database for users and posts
+Link Up is a flexible backend system that provides a robust foundation for social media applications. It offers a comprehensive API that can be integrated with any front-end interface.
+
+### Core Features
+
+- **User Management**
+  - Secure authentication
+  - Profile privacy controls
+  - User profile management
+
+- **Content Management**
+  - Create, read, update, and delete posts
+  - Media upload support (images, videos)
+  - Content search capabilities
+
+- **Media Handling**
+  - Secure file uploads
+  - Azure Blob Storage integration
+  - Media optimization
+
+### Architecture
+
+The system is built using the following Azure services:
+
+- **Azure App Service**: Hosts the Node.js application
+- **Azure Cosmos DB**: Main database for user and post data
 - **Azure Blob Storage**: Media file storage
 - **Azure Cognitive Search**: Content search functionality
-- **Azure Service Bus**: Notification system
 - **Azure Communication Services**: User communication features
-- **Azure App Service**: Application hosting
 
 ## API Documentation
 
@@ -63,7 +84,7 @@ Content-Type: multipart/form-data
 
 {
   "content": "string",
-  "media": "file" (optional)
+  "media": "file"
 }
 ```
 
@@ -118,65 +139,52 @@ Response:
 ]
 ```
 
-## Deployment Guide
+## Security
 
-### Prerequisites
-- Azure CLI installed
-- Node.js 18 or higher
-- Azure subscription
+- JWT-based authentication
+- Secure file upload handling
+- Azure Key Vault integration for secrets
+- CORS protection
+- Rate limiting
 
-### Environment Variables
-Create a `.env` file with the following variables:
-```
-COSMOS_ENDPOINT=your_cosmos_db_endpoint
-COSMOS_KEY=your_cosmos_db_key
-STORAGE_CONNECTION_STRING=your_storage_connection_string
-SEARCH_ENDPOINT=your_search_endpoint
-SEARCH_API_KEY=your_search_api_key
-JWT_SECRET=your_jwt_secret
-COMMUNICATION_CONNECTION_STRING=your_communication_connection_string
-```
+## Error Handling
 
-### Deployment Steps
+All API endpoints return standard HTTP status codes:
 
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd linkup-social-platform
-```
+- 200: Success
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 500: Internal Server Error
 
-2. **Install dependencies**
-```bash
-npm install
+Error responses follow this format:
+```json
+{
+  "error": "Error message description"
+}
 ```
 
-5. **Run the application locally**
-```bash
-npm start
+## Data Models
+
+### User
+```json
+{
+  "id": "string",
+  "username": "string",
+  "email": "string",
+  "isPrivate": "boolean",
+  "createdAt": "string"
+}
 ```
 
-
-## Development Setup
-
-1. **Install dependencies**
-```bash
-npm install
+### Post
+```json
+{
+  "id": "string",
+  "userId": "string",
+  "content": "string",
+  "mediaUrl": "string",
+  "createdAt": "string"
+}
 ```
-
-2. **Start development server**
-```bash
-npm run dev
-```
-
-The server will start on `http://localhost:3000`
-
-## Testing
-
-Run the test suite:
-```bash
-npm test
-```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details
