@@ -99,6 +99,19 @@ Response:
 }
 ```
 
+### Delete Post
+```http
+DELETE /posts/{postId}
+Authorization: Bearer {token}
+```
+
+Response:
+```json
+{
+  "message": "Post deleted successfully"
+}
+```
+
 #### Get User Posts
 ```http
 GET /posts/{userId}
