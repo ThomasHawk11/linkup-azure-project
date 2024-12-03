@@ -36,7 +36,6 @@ async function deletePostMedia(mediaUrl) {
     const blobName = mediaUrl.split('/').pop();
     const blockBlobClient = mediaContainer.getBlockBlobClient(blobName);
     
-    // Check if blob exists before attempting to delete
     const exists = await blockBlobClient.exists();
     if (exists) {
       await blockBlobClient.delete();
@@ -46,7 +45,6 @@ async function deletePostMedia(mediaUrl) {
     }
   } catch (error) {
     console.error('Error checking/deleting media blob:', error);
-    // Don't throw the error as media deletion is not critical
   }
 }
 
@@ -64,12 +62,10 @@ async function deletePost(postId) {
       return { success: false, error: 'Post not found' };
     }
 
-    // Delete media first if it exists
     if (post.mediaUrl) {
       await deletePostMedia(post.mediaUrl);
     }
 
-    // Delete the post from the database
     await posts.item(postId, postId).delete();
     return { success: true };
   } catch (error) {
