@@ -99,7 +99,7 @@ Response:
 }
 ```
 
-### Delete Post
+#### Delete Post
 ```http
 DELETE /posts/{postId}
 Authorization: Bearer {token}
