@@ -1,226 +1,158 @@
 # Link Up Platform Deployment Guide
 
-This guide provides step-by-step instructions for deploying the Link Up social media platform on Azure.
+Ce guide fournit les instructions étape par étape pour déployer la plateforme Link Up sur Azure en utilisant le portail Azure.
 
-## Prerequisites
+## Prérequis
 
-1. Azure Account with active subscription
-2. Azure CLI installed
-3. Node.js 18.x or later
-4. GitHub account (for CI/CD)
+1. Un compte Azure avec un abonnement actif
+2. Un compte GitHub
+3. Node.js 18.x ou plus récent installé localement
 
-## Azure Resources Setup
+## Configuration des Ressources Azure
 
-### 1. Initial Setup
+### 1. Création du Groupe de Ressources
 
-```bash
-# Login to Azure
-az login
+1. Connectez-vous au [Portail Azure](https://portal.azure.com)
+2. Cliquez sur "Créer une ressource" (Create a resource)
+3. Recherchez "Groupe de ressources" (Resource group)
+4. Cliquez sur "Créer" (Create)
+5. Remplissez les informations :
+   - Abonnement : Sélectionnez votre abonnement
+   - Groupe de ressources : `linkup-rg`
+   - Région : Choisissez la région la plus proche
+6. Cliquez sur "Vérifier + créer" puis "Créer"
 
-# Set subscription
-az account set --subscription <your-subscription-id>
-```
+### 2. Azure Cosmos DB
 
-### 2. Run Infrastructure Script
+1. Dans le portail Azure, cliquez sur "Créer une ressource"
+2. Recherchez "Azure Cosmos DB"
+3. Sélectionnez "Azure Cosmos DB" et cliquez sur "Créer"
+4. Choisissez "Core (SQL) - Recommended"
+5. Configuration de base :
+   - Groupe de ressources : `linkup-rg`
+   - Nom du compte : `linkup-cosmos`
+   - Emplacement : Même région que le groupe de ressources
+6. Cliquez sur "Vérifier + créer" puis "Créer"
+7. Une fois déployé, créez une base de données :
+   - Accédez à la ressource
+   - Cliquez sur "Data Explorer"
+   - Créez une nouvelle base de données "linkupdb"
+   - Créez deux conteneurs :
+     - "users" avec clé de partition "/userId"
+     - "posts" avec clé de partition "/userId"
 
-```bash
-# Make the script executable
-chmod +x infrastructure/azure-setup.sh
+### 3. Compte de Stockage
 
-# Run the script
-./infrastructure/azure-setup.sh
-```
+1. Dans le portail Azure, créez une nouvelle ressource
+2. Recherchez "Compte de stockage"
+3. Configuration :
+   - Groupe de ressources : `linkup-rg`
+   - Nom du compte : `linkupstorageacc`
+   - Performance : Standard
+   - Redondance : LRS
+4. Une fois créé, configurez le conteneur :
+   - Accédez à "Conteneurs"
+   - Créez un nouveau conteneur nommé "media"
+   - Niveau d'accès : Blob
 
-This script creates all necessary Azure resources:
-- Resource Group
-- Cosmos DB
-- Storage Account
-- Cognitive Search
-- App Service
-- Communication Services
+### 4. Azure Cognitive Search
 
-### 3. Environment Configuration
+1. Créez une nouvelle ressource
+2. Recherchez "Azure Cognitive Search"
+3. Configuration :
+   - Groupe de ressources : `linkup-rg`
+   - Nom du service : `linkup-search`
+   - Niveau tarifaire : Basic
+4. Une fois déployé, créez un index :
+   - Accédez à "Indexes"
+   - Créez un nouvel index nommé "posts-index"
+   - Définissez les champs :
+     ```json
+     {
+       "name": "posts-index",
+       "fields": [
+         {"name": "id", "type": "Edm.String", "key": true, "searchable": false},
+         {"name": "userId", "type": "Edm.String", "searchable": false, "filterable": true},
+         {"name": "content", "type": "Edm.String", "searchable": true, "analyzer": "standard.lucene"},
+         {"name": "mediaUrl", "type": "Edm.String", "searchable": false},
+         {"name": "createdAt", "type": "Edm.DateTimeOffset", "searchable": false, "sortable": true}
+       ]
+     }
+     ```
 
-Create a `.env` file with the following variables:
+### 5. Service d'application
 
-```env
-COSMOS_ENDPOINT=<your-cosmos-endpoint>
-COSMOS_KEY=<your-cosmos-key>
-STORAGE_CONNECTION_STRING=<your-storage-connection-string>
-SEARCH_ENDPOINT=<your-search-endpoint>
-SEARCH_API_KEY=<your-search-api-key>
-JWT_SECRET=<your-jwt-secret>
-COMMUNICATION_CONNECTION_STRING=<your-communication-connection-string>
-```
+1. Créez une nouvelle ressource
+2. Recherchez "App Service"
+3. Configuration :
+   - Groupe de ressources : `linkup-rg`
+   - Nom : `linkup-supinfo-api`
+   - Pile d'exécution : Node 18 LTS
+   - Système d'exploitation : Linux
+   - Région : Même que le groupe de ressources
+   - Plan App Service : Créez-en un nouveau (B1)
 
-### 4. GitHub Actions Setup
+### 6. Configuration des Variables d'Environnement
 
-1. Navigate to your GitHub repository settings
-2. Go to "Secrets and variables" → "Actions"
-3. Add the following secrets:
-   - `AZURE_WEBAPP_PUBLISH_PROFILE`
-   - `COSMOS_ENDPOINT`
-   - `COSMOS_KEY`
-   - `STORAGE_CONNECTION_STRING`
-   - `SEARCH_ENDPOINT`
-   - `SEARCH_API_KEY`
-   - `JWT_SECRET`
-   - `COMMUNICATION_CONNECTION_STRING`
+Dans le Service d'application :
+1. Accédez à "Configuration"
+2. Ajoutez les variables d'environnement suivantes :
+   - `COSMOS_ENDPOINT` : URL de votre Cosmos DB
+   - `COSMOS_KEY` : Clé primaire de Cosmos DB
+   - `STORAGE_CONNECTION_STRING` : Chaîne de connexion du compte de stockage
+   - `SEARCH_ENDPOINT` : URL de Cognitive Search
+   - `SEARCH_API_KEY` : Clé d'administration de Cognitive Search
+   - `JWT_SECRET` : Une chaîne aléatoire pour signer les JWT
+   - `WEBSITE_NODE_DEFAULT_VERSION` : 18.x
 
-### 5. Configure Azure App Service
+## Configuration du Déploiement Continu
 
-```bash
-# Set Node.js version
-az webapp config appsettings set --name linkup-supinfo-api \
-                                --resource-group linkup-rg \
-                                --settings WEBSITE_NODE_DEFAULT_VERSION=18.x
+### 1. Configuration GitHub Actions
 
-# Enable logging
-az webapp log config --name linkup-supinfo-api \
-                    --resource-group linkup-rg \
-                    --application-logging filesystem \
-                    --detailed-error-messages true \
-                    --failed-request-tracing true \
-                    --web-server-logging filesystem
-```
+1. Dans votre dépôt GitHub :
+   - Accédez à "Settings" > "Secrets and variables" > "Actions"
+   - Ajoutez les secrets suivants :
+     - `AZURE_WEBAPP_PUBLISH_PROFILE` : Profil de publication du Service d'application
+     - `COSMOS_ENDPOINT`
+     - `COSMOS_KEY`
+     - `STORAGE_CONNECTION_STRING`
+     - `SEARCH_ENDPOINT`
+     - `SEARCH_API_KEY`
+     - `JWT_SECRET`
 
-## Post-Deployment Verification
+### 2. Obtention du Profil de Publication
 
-1. Check Application Logs:
-```bash
-az webapp log tail --name linkup-supinfo-api --resource-group linkup-rg
-```
+1. Dans le Service d'application Azure :
+   - Accédez à "Centre de déploiement"
+   - Cliquez sur "Gérer le profil de publication"
+   - Téléchargez le fichier
+   - Copiez son contenu dans le secret GitHub `AZURE_WEBAPP_PUBLISH_PROFILE`
 
-2. Test the endpoints:
-```bash
-curl https://linkup-supinfo-api.azurewebsites.net/health
-```
+## Vérification du Déploiement
 
-## Troubleshooting
+1. Surveillez le déploiement :
+   - Dans GitHub, accédez à "Actions"
+   - Vérifiez que le workflow se termine avec succès
 
-### Common Issues
+2. Testez l'API :
+   - Utilisez l'URL : `https://linkup-supinfo-api.azurewebsites.net`
+   - Vérifiez les points de terminaison principaux
 
-1. **Deployment Failures**
-   - Check GitHub Actions logs
-   - Verify secrets are correctly set
-   - Ensure Node.js version matches
+## Dépannage
 
-2. **Database Connection Issues**
-   - Verify Cosmos DB connection string
-   - Check network security rules
-   - Validate database permissions
+### Problèmes Courants
 
-3. **Storage Problems**
-   - Confirm storage account connection string
-   - Check container permissions
-   - Verify CORS settings
+1. **Erreurs de Déploiement**
+   - Vérifiez les logs dans GitHub Actions
+   - Assurez-vous que tous les secrets sont correctement configurés
+   - Vérifiez que la version Node.js correspond
 
-### Monitoring
+2. **Problèmes de Base de Données**
+   - Vérifiez les chaînes de connexion dans les paramètres d'application
+   - Vérifiez les règles de pare-feu Cosmos DB
+   - Validez les permissions de la base de données
 
-1. Set up Azure Monitor:
-```bash
-az monitor app-insights component create \
-    --app linkup-insights \
-    --location westeurope \
-    --resource-group linkup-rg \
-    --application-type web
-```
-
-2. Enable Application Insights:
-```bash
-az webapp config appsettings set \
-    --name linkup-supinfo-api \
-    --resource-group linkup-rg \
-    --settings APPINSIGHTS_INSTRUMENTATIONKEY=<your-key>
-```
-
-## Scaling Configuration
-
-### App Service Scaling
-
-```bash
-# Set up autoscaling
-az monitor autoscale create \
-    --resource-group linkup-rg \
-    --name linkup-autoscale \
-    --resource linkup-supinfo-api \
-    --min-count 1 \
-    --max-count 5 \
-    --count 1
-```
-
-### Cosmos DB Scaling
-
-```bash
-# Update RU/s
-az cosmosdb sql database throughput update \
-    --account-name linkup-cosmos \
-    --name linkupdb \
-    --resource-group linkup-rg \
-    --throughput 400
-```
-
-## Backup and Disaster Recovery
-
-### Configure Backup
-
-```bash
-# Enable automatic backup
-az webapp config backup create \
-    --resource-group linkup-rg \
-    --webapp-name linkup-supinfo-api \
-    --frequency 1d \
-    --retain-one true \
-    --container-url <storage-container-url> \
-    --sas-url <sas-token>
-```
-
-### Restore from Backup
-
-```bash
-az webapp config backup restore \
-    --resource-group linkup-rg \
-    --webapp-name linkup-supinfo-api \
-    --container-url <storage-container-url> \
-    --sas-url <sas-token> \
-    --backup-name <backup-name>
-```
-
-## Security Considerations
-
-1. Enable SSL:
-```bash
-az webapp config ssl bind \
-    --name linkup-supinfo-api \
-    --resource-group linkup-rg \
-    --certificate-thumbprint <thumbprint> \
-    --ssl-type SNI
-```
-
-2. Configure IP restrictions:
-```bash
-az webapp config access-restriction add \
-    --resource-group linkup-rg \
-    --name linkup-supinfo-api \
-    --rule-name "allow-specific-ips" \
-    --action Allow \
-    --ip-address <your-ip-range>
-```
-
-## Maintenance
-
-### Regular Tasks
-
-1. Update Node.js version when needed
-2. Monitor resource usage
-3. Review and rotate access keys
-4. Check and update SSL certificates
-5. Review and optimize database indexes
-
-### Performance Optimization
-
-1. Enable CDN for media content
-2. Configure caching headers
-3. Monitor and adjust scaling rules
-4. Optimize database queries
-5. Review and update search indexes
+3. **Problèmes de Stockage**
+   - Vérifiez la chaîne de connexion du stockage
+   - Vérifiez les permissions du conteneur
+   - Vérifiez les paramètres CORS
