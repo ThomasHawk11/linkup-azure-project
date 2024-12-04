@@ -66,7 +66,8 @@ async function deletePost(postId) {
       await deletePostMedia(post.mediaUrl);
     }
 
-    await posts.item(postId, postId).delete();
+    console.log('Deleting post:', postId, 'by user:', post.userId);
+    await posts.item(postId, post.userId).delete();
     return { success: true };
   } catch (error) {
     console.error('Error deleting post:', error);
