@@ -4,6 +4,21 @@ A scalable, headless social media platform built with Node.js and Azure services
 
 - #### See [deployment guide](./README.md)
 
+## Setup
+
+1. Clone the repository
+2. Install dependencies
+3. Configure environment variables
+4. Run the application
+
+```bash
+git clone
+cd link-up-platform
+npm install
+cp .env.example .env
+npm start
+```
+
 ## System Overview
 
 Link Up is a flexible backend system that provides a robust foundation for social media applications. It offers a comprehensive API that can be integrated with any front-end interface.
