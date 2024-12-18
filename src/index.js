@@ -10,9 +10,9 @@ const app = express();
 app.use(express.json());
 
 // Public routes
-app.use('/', (req, res) => {
-  res.json({ message: 'Welcome to Linkup API' });
-});
+// app.use('/', (req, res) => {
+//   res.json({ message: 'Welcome to Linkup API' });
+// });
 app.use('/auth', authRoutes);
 
 // Protected routes
